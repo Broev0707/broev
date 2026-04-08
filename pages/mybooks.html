@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои книги - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Мои книги</h2>
+                <p class="mybooks-desc">Здесь отображаются книги, которые вы взяли в библиотеке.</p>
+            </div>
+            
+            <div id="mybooksContent"></div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        // Данные текущего пользователя (ученика)
+        const currentUser = {
+            id: 1,
+            name: "Иванов Иван Иванович",
+            class: "9А"
+        };
+        
+        // История выдач для этого ученика
+        let myLoans = [
+            { id: 1, bookTitle: "Война и мир", bookAuthor: "Лев Толстой", loanDate: "2026-03-01", dueDate: "2026-03-31", returnDate: null, status: "active" },
+            { id: 2, bookTitle: "Евгений Онегин", bookAuthor: "Александр Пушкин", loanDate: "2026-03-15", dueDate: "2026-04-14", returnDate: null, status: "active" },
+            { id: 3, bookTitle: "Мастер и Маргарита", bookAuthor: "Михаил Булгаков", loanDate: "2026-02-01", dueDate: "2026-03-03", returnDate: "2026-03-02", status: "returned" }
+        ];
+        
+        function renderMyBooks() {
+            const container = document.getElementById('mybooksContent');
+            const today = new Date().toISOString().slice(0,10);
+            
+            const activeLoans = myLoans.filter(loan => loan.status === 'active');
+            const returnedLoans = myLoans.filter(loan => loan.status === 'returned');
+            
+            let html = `
+                <div class="welcome-message">
+                    <p>Читатель: <strong>${currentUser.name}</strong> (${currentUser.class})</p>
+                </div>
+            `;
+            
+            // Активные выдачи
+            html += `<div class="loans-section">
+                        <h4>📖 Текущие выдачи (невозвращённые)</h4>`;
+            
+            if(activeLoans.length === 0) {
+                html += `<p class="empty-message">У вас нет активных выдач. Все книги возвращены.</p>`;
+            } else {
+                html += `<table class="loans-table">
+                            <thead>
+                                <tr>
+                                    <th>Название книги</th>
+                                    <th>Автор</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Должен вернуть</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                activeLoans.forEach(loan => {
+                    const isOverdue = loan.dueDate < today;
+                    const rowClass = isOverdue ? 'overdue-row' : '';
+                    html += `<tr class="${rowClass}">
+                                <td>${loan.bookTitle}</td>
+                                <td>${loan.bookAuthor}</td>
+                                <td>${loan.loanDate}</td>
+                                <td class="${isOverdue ? 'overdue-date' : ''}">${loan.dueDate}${isOverdue ? ' <span class="badge overdue-badge">Просрочена</span>' : ''}</td>
+                                <td>${isOverdue ? '<span class="status-warning">Необходимо вернуть!</span>' : '<span class="status-ok">В срок</span>'}</td>
+                            </tr>`;
+                });
+                
+                html += `</tbody>
+                        </table>`;
+            }
+            
+            html += `</div>`;
+            
+            // История выдач
+            html += `<div class="loans-section">
+                        <h4>📚 История выдач (возвращённые)</h4>`;
+            
+            if(returnedLoans.length === 0) {
+                html += `<p class="empty-message">История выдач пуста.</p>`;
+            } else {
+                html += `<table class="loans-table compact">
+                            <thead>
+                                <tr>
+                                    <th>Название книги</th>
+                                    <th>Автор</th>
+                                    <th>Дата выдачи</th>
+                                    <th>Дата возврата</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                returnedLoans.forEach(loan => {
+                    html += `<tr>
+                                <td>${loan.bookTitle}</td>
+                                <td>${loan.bookAuthor}</td>
+                                <td>${loan.loanDate}</td>
+                                <td>${loan.returnDate || '—'}</td>
+                            </tr>`;
+                });
+                
+                html += `</tbody>
+                        </table>`;
+            }
+            
+            html += `</div>`;
+            
+            // Статистика
+            html += `<div class="stats-summary">
+                        <div class="stat-badge">
+                            <span class="stat-number">${activeLoans.length}</span>
+                            <span class="stat-text">активных выдач</span>
+                        </div>
+                        <div class="stat-badge">
+                            <span class="stat-number">${returnedLoans.length}</span>
+                            <span class="stat-text">возвращённых книг</span>
+                        </div>
+                    </div>`;
+            
+            container.innerHTML = html;
+        }
+        
+        renderMyBooks();
+    </script>
+    
+    <style>
+        .mybooks-desc {
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .welcome-message {
+            background: #ecf0f1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .loans-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .loans-section h4 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .loans-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .loans-table th, .loans-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .loans-table th {
+            background-color: #ecf0f1;
+            font-weight: bold;
+        }
+        
+        .loans-table.compact th, .loans-table.compact td {
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .overdue-row {
+            background-color: #fee2e2;
+        }
+        
+        .overdue-date {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .badge.overdue-badge {
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        
+        .status-ok {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-warning {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .stats-summary {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .stat-badge {
+            text-align: center;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-text {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</body>
+</html>

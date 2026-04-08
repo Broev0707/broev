@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Школьная библиотека - Главная</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="pages/books.html">Книги</a></li>
+                <li><a href="pages/readers.html">Читатели</a></li>
+                <li><a href="pages/loans.html">Выдача книг</a></li>
+                <li><a href="pages/returns.html">Возврат книг</a></li>
+                <li><a href="pages/reports.html">Отчёты</a></li>
+                <li><a href="pages/catalog.html">Каталог</a></li>
+                <li><a href="pages/mybooks.html">Мои книги</a></li>
+                <li><a href="pages/users.html">Пользователи</a></li>
+                <li><a href="login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Панель управления</h2>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>Всего книг</h3>
+                    <p class="card-number">1250</p>
+                </div>
+                <div class="card">
+                    <h3>Активных выдач</h3>
+                    <p class="card-number">47</p>
+                </div>
+                <div class="card">
+                    <h3>Должников</h3>
+                    <p class="card-number">8</p>
+                </div>
+                <div class="card">
+                    <h3>Читателей</h3>
+                    <p class="card-number">342</p>
+                </div>
+            </div>
+            
+            <div class="recent-info">
+                <h3>Добро пожаловать в систему управления школьной библиотекой!</h3>
+                <p>Используйте меню для навигации по разделам: управление книгами, читателями, выдача и возврат литературы, формирование отчётов.</p>
+                <p>В данном разделе отображается общая статистика библиотеки.</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>

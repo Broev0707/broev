@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Возврат книг - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Возврат книг</h2>
+            </div>
+            
+            <div id="returnsList"></div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        let books = [
+            { id: 1, title: "Война и мир", author: "Лев Толстой", available: 3 },
+            { id: 2, title: "Преступление и наказание", author: "Фёдор Достоевский", available: 2 },
+            { id: 3, title: "Мастер и Маргарита", author: "Михаил Булгаков", available: 1 },
+            { id: 4, title: "Евгений Онегин", author: "Александр Пушкин", available: 4 },
+            { id: 5, title: "Анна Каренина", author: "Лев Толстой", available: 2 }
+        ];
+        
+        let activeLoans = [
+            { id: 1, readerId: 1, readerName: "Иванов Иван Иванович", readerClass: "9А", phone: "+7 999 123-45-67", bookId: 1, bookTitle: "Война и мир", loanDate: "2026-03-01", dueDate: "2026-03-31" },
+            { id: 2, readerId: 2, readerName: "Петрова Анна Сергеевна", readerClass: "10Б", phone: "+7 999 234-56-78", bookId: 2, bookTitle: "Преступление и наказание", loanDate: "2026-03-10", dueDate: "2026-04-09" },
+            { id: 3, readerId: 4, readerName: "Кузнецова Екатерина Владимировна", readerClass: "11А", phone: "+7 999 456-78-90", bookId: 3, bookTitle: "Мастер и Маргарита", loanDate: "2026-02-15", dueDate: "2026-03-17" }
+        ];
+        
+        function updateBookAvailability(bookId, change) {
+            const book = books.find(b => b.id === bookId);
+            if(book) {
+                book.available += change;
+            }
+        }
+        
+        function returnBook(loanId, bookId, bookTitle, readerName) {
+            if(confirm(`Вернуть книгу "${bookTitle}" читателю ${readerName}?`)) {
+                activeLoans = activeLoans.filter(loan => loan.id !== loanId);
+                updateBookAvailability(bookId, 1);
+                renderReturnsList();
+                showMessage(`Книга "${bookTitle}" возвращена`, 'success');
+            }
+        }
+        
+        function renderReturnsList() {
+            const container = document.getElementById('returnsList');
+            const today = new Date().toISOString().slice(0,10);
+            
+            if(activeLoans.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Нет активных выдач. Все книги возвращены в библиотеку.</p></div>';
+                return;
+            }
+            
+            let html = '<div class="stats-cards"><div class="stat-card"><div class="stat-number">' + activeLoans.length + '</div><div class="stat-label">Активных выдач</div></div>';
+            
+            let overdueCount = activeLoans.filter(loan => loan.dueDate < today).length;
+            html += '<div class="stat-card overdue-stat"><div class="stat-number">' + overdueCount + '</div><div class="stat-label">Просроченных</div></div></div>';
+            
+            html += '<table class="returns-table"><thead><tr><th>Читатель</th><th>Класс</th><th>Телефон</th><th>Книга</th><th>Автор</th><th>Дата выдачи</th><th>Должен вернуть</th><th>Действие</th></tr></thead><tbody>';
+            
+            activeLoans.forEach(loan => {
+                const isOverdue = loan.dueDate < today;
+                const rowClass = isOverdue ? 'overdue-row' : '';
+                const book = books.find(b => b.id === loan.bookId);
+                const author = book ? book.author : '';
+                
+                html += `<tr class="${rowClass}">
+                            <td>${loan.readerName}</td>
+                            <td>${loan.readerClass}</td>
+                            <td>${loan.phone}</td>
+                            <td>${loan.bookTitle}</td>
+                            <td>${author}</td>
+                            <td>${loan.loanDate}</td>
+                            <td class="${isOverdue ? 'overdue-date' : ''}">${loan.dueDate}</td>
+                            <td><button class="btn-return" onclick="returnBook(${loan.id}, ${loan.bookId}, '${loan.bookTitle}', '${loan.readerName}')">Вернуть</button></td>
+                         </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        renderReturnsList();
+    </script>
+    
+    <style>
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .overdue-stat .stat-number {
+            color: #e74c3c;
+        }
+        
+        .returns-table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .returns-table th, .returns-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .returns-table th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .overdue-row {
+            background-color: #fee2e2;
+        }
+        
+        .overdue-date {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .btn-return {
+            background-color: #27ae60;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-return:hover {
+            background-color: #219a52;
+        }
+        
+        .empty-state {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            color: #888;
+        }
+    </style>
+</body>
+</html>

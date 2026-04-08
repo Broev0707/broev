@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книги - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Управление книгами</h2>
+            </div>
+            
+            <div class="page-actions">
+                <button class="btn btn-primary" id="showAddFormBtn">+ Добавить книгу</button>
+                <input type="text" id="searchInput" placeholder="Поиск по названию или автору" class="search-input">
+            </div>
+            
+            <div id="addBookForm" style="display:none;" class="form-container">
+                <h3>Добавление новой книги</h3>
+                <form id="bookForm">
+                    <div class="form-group">
+                        <label>Название *</label>
+                        <input type="text" id="bookTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Автор *</label>
+                        <input type="text" id="bookAuthor" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Год издания</label>
+                        <input type="number" id="bookYear">
+                    </div>
+                    <div class="form-group">
+                        <label>Издательство</label>
+                        <input type="text" id="bookPublisher">
+                    </div>
+                    <div class="form-group">
+                        <label>Количество экземпляров</label>
+                        <input type="number" id="bookCopies" value="1">
+                    </div>
+                    <button type="button" id="saveBookBtn" class="btn btn-success">Сохранить</button>
+                    <button type="button" id="hideAddFormBtn" class="btn btn-secondary">Отмена</button>
+                </form>
+            </div>
+            
+            <table id="booksTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Автор</th>
+                        <th>Год</th>
+                        <th>Издательство</th>
+                        <th>Всего</th>
+                        <th>Доступно</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="booksTableBody">
+                    <!-- Данные будут загружены из JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        // Данные книг
+        let books = [
+            { id: 1, title: "Война и мир", author: "Лев Толстой", year: 1869, publisher: "Русский вестник", total: 5, available: 3 },
+            { id: 2, title: "Преступление и наказание", author: "Фёдор Достоевский", year: 1866, publisher: "Русский вестник", total: 4, available: 2 },
+            { id: 3, title: "Мастер и Маргарита", author: "Михаил Булгаков", year: 1967, publisher: "Москва", total: 3, available: 1 },
+            { id: 4, title: "Евгений Онегин", author: "Александр Пушкин", year: 1833, publisher: "Современник", total: 6, available: 4 },
+            { id: 5, title: "Анна Каренина", author: "Лев Толстой", year: 1877, publisher: "Русский вестник", total: 4, available: 2 }
+        ];
+        
+        let nextId = 6;
+        
+        function renderBooksTable(filter = '') {
+            const tbody = document.getElementById('booksTableBody');
+            const filteredBooks = books.filter(book => 
+                book.title.toLowerCase().includes(filter.toLowerCase()) ||
+                book.author.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            tbody.innerHTML = '';
+            filteredBooks.forEach(book => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = book.id;
+                row.insertCell(1).textContent = book.title;
+                row.insertCell(2).textContent = book.author;
+                row.insertCell(3).textContent = book.year;
+                row.insertCell(4).textContent = book.publisher;
+                row.insertCell(5).textContent = book.total;
+                row.insertCell(6).textContent = book.available;
+                const actionsCell = row.insertCell(7);
+                actionsCell.innerHTML = `<button class="btn-edit" onclick="editBook(${book.id})">Ред.</button>
+                                         <button class="btn-delete" onclick="deleteBook(${book.id})">Уд.</button>`;
+            });
+        }
+        
+        function deleteBook(id) {
+            if(confirm('Удалить книгу?')) {
+                books = books.filter(book => book.id !== id);
+                renderBooksTable(document.getElementById('searchInput').value);
+                showMessage('Книга удалена', 'success');
+            }
+        }
+        
+        function editBook(id) {
+            const book = books.find(b => b.id === id);
+            if(book) {
+                document.getElementById('bookTitle').value = book.title;
+                document.getElementById('bookAuthor').value = book.author;
+                document.getElementById('bookYear').value = book.year;
+                document.getElementById('bookPublisher').value = book.publisher;
+                document.getElementById('bookCopies').value = book.total;
+                document.getElementById('addBookForm').style.display = 'block';
+                document.getElementById('showAddFormBtn').style.display = 'none';
+                
+                const saveBtn = document.getElementById('saveBookBtn');
+                const newSaveBtn = saveBtn.cloneNode(true);
+                saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                newSaveBtn.onclick = function() {
+                    book.title = document.getElementById('bookTitle').value;
+                    book.author = document.getElementById('bookAuthor').value;
+                    book.year = parseInt(document.getElementById('bookYear').value);
+                    book.publisher = document.getElementById('bookPublisher').value;
+                    book.total = parseInt(document.getElementById('bookCopies').value);
+                    book.available = book.total - (book.total - book.available);
+                    renderBooksTable(document.getElementById('searchInput').value);
+                    document.getElementById('addBookForm').style.display = 'none';
+                    document.getElementById('showAddFormBtn').style.display = 'inline-block';
+                    showMessage('Книга обновлена', 'success');
+                };
+            }
+        }
+        
+        document.getElementById('showAddFormBtn').onclick = function() {
+            document.getElementById('addBookForm').style.display = 'block';
+            this.style.display = 'none';
+            document.getElementById('bookForm').reset();
+            
+            const saveBtn = document.getElementById('saveBookBtn');
+            const newSaveBtn = saveBtn.cloneNode(true);
+            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+            newSaveBtn.onclick = function() {
+                const newBook = {
+                    id: nextId++,
+                    title: document.getElementById('bookTitle').value,
+                    author: document.getElementById('bookAuthor').value,
+                    year: parseInt(document.getElementById('bookYear').value) || 0,
+                    publisher: document.getElementById('bookPublisher').value,
+                    total: parseInt(document.getElementById('bookCopies').value),
+                    available: parseInt(document.getElementById('bookCopies').value)
+                };
+                books.push(newBook);
+                renderBooksTable(document.getElementById('searchInput').value);
+                document.getElementById('addBookForm').style.display = 'none';
+                document.getElementById('showAddFormBtn').style.display = 'inline-block';
+                showMessage('Книга добавлена', 'success');
+            };
+        };
+        
+        document.getElementById('hideAddFormBtn').onclick = function() {
+            document.getElementById('addBookForm').style.display = 'none';
+            document.getElementById('showAddFormBtn').style.display = 'inline-block';
+        };
+        
+        document.getElementById('searchInput').oninput = function() {
+            renderBooksTable(this.value);
+        };
+        
+        renderBooksTable();
+    </script>
+</body>
+</html>

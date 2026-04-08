@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Читатели - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Управление читателями</h2>
+            </div>
+            
+            <div class="page-actions">
+                <button class="btn btn-primary" id="showAddFormBtn">+ Добавить читателя</button>
+                <input type="text" id="searchInput" placeholder="Поиск по имени или классу" class="search-input">
+            </div>
+            
+            <div id="addReaderForm" style="display:none;" class="form-container">
+                <h3>Добавление нового читателя</h3>
+                <form id="readerForm">
+                    <div class="form-group">
+                        <label>ФИО *</label>
+                        <input type="text" id="readerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Класс / должность</label>
+                        <input type="text" id="readerClass">
+                    </div>
+                    <div class="form-group">
+                        <label>Контактный телефон</label>
+                        <input type="text" id="readerPhone">
+                    </div>
+                    <button type="button" id="saveReaderBtn" class="btn btn-success">Сохранить</button>
+                    <button type="button" id="hideAddFormBtn" class="btn btn-secondary">Отмена</button>
+                </form>
+            </div>
+            
+            <table id="readersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ФИО</th>
+                        <th>Класс</th>
+                        <th>Телефон</th>
+                        <th>Дата регистрации</th>
+                        <th>Активных книг</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="readersTableBody">
+                </tbody>
+            </table>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        let readers = [
+            { id: 1, name: "Иванов Иван Иванович", class: "9А", phone: "+7 999 123-45-67", regDate: "2024-09-01", activeBooks: 2 },
+            { id: 2, name: "Петрова Анна Сергеевна", class: "10Б", phone: "+7 999 234-56-78", regDate: "2024-09-01", activeBooks: 1 },
+            { id: 3, name: "Сидоров Дмитрий Алексеевич", class: "8В", phone: "+7 999 345-67-89", regDate: "2024-09-01", activeBooks: 0 },
+            { id: 4, name: "Кузнецова Екатерина Владимировна", class: "11А", phone: "+7 999 456-78-90", regDate: "2024-09-01", activeBooks: 3 }
+        ];
+        
+        let nextId = 5;
+        
+        function renderReadersTable(filter = '') {
+            const tbody = document.getElementById('readersTableBody');
+            const filteredReaders = readers.filter(reader => 
+                reader.name.toLowerCase().includes(filter.toLowerCase()) ||
+                reader.class.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            tbody.innerHTML = '';
+            filteredReaders.forEach(reader => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = reader.id;
+                row.insertCell(1).textContent = reader.name;
+                row.insertCell(2).textContent = reader.class;
+                row.insertCell(3).textContent = reader.phone;
+                row.insertCell(4).textContent = reader.regDate;
+                row.insertCell(5).textContent = reader.activeBooks;
+                const actionsCell = row.insertCell(6);
+                actionsCell.innerHTML = `<button class="btn-edit" onclick="editReader(${reader.id})">Ред.</button>
+                                         <button class="btn-delete" onclick="deleteReader(${reader.id})">Уд.</button>`;
+            });
+        }
+        
+        function deleteReader(id) {
+            if(confirm('Удалить читателя?')) {
+                readers = readers.filter(reader => reader.id !== id);
+                renderReadersTable(document.getElementById('searchInput').value);
+                showMessage('Читатель удалён', 'success');
+            }
+        }
+        
+        function editReader(id) {
+            const reader = readers.find(r => r.id === id);
+            if(reader) {
+                document.getElementById('readerName').value = reader.name;
+                document.getElementById('readerClass').value = reader.class;
+                document.getElementById('readerPhone').value = reader.phone;
+                document.getElementById('addReaderForm').style.display = 'block';
+                document.getElementById('showAddFormBtn').style.display = 'none';
+                
+                const saveBtn = document.getElementById('saveReaderBtn');
+                const newSaveBtn = saveBtn.cloneNode(true);
+                saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                newSaveBtn.onclick = function() {
+                    reader.name = document.getElementById('readerName').value;
+                    reader.class = document.getElementById('readerClass').value;
+                    reader.phone = document.getElementById('readerPhone').value;
+                    renderReadersTable(document.getElementById('searchInput').value);
+                    document.getElementById('addReaderForm').style.display = 'none';
+                    document.getElementById('showAddFormBtn').style.display = 'inline-block';
+                    showMessage('Данные читателя обновлены', 'success');
+                };
+            }
+        }
+        
+        document.getElementById('showAddFormBtn').onclick = function() {
+            document.getElementById('addReaderForm').style.display = 'block';
+            this.style.display = 'none';
+            document.getElementById('readerForm').reset();
+            
+            const saveBtn = document.getElementById('saveReaderBtn');
+            const newSaveBtn = saveBtn.cloneNode(true);
+            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+            newSaveBtn.onclick = function() {
+                const newReader = {
+                    id: nextId++,
+                    name: document.getElementById('readerName').value,
+                    class: document.getElementById('readerClass').value,
+                    phone: document.getElementById('readerPhone').value,
+                    regDate: new Date().toISOString().slice(0,10),
+                    activeBooks: 0
+                };
+                readers.push(newReader);
+                renderReadersTable(document.getElementById('searchInput').value);
+                document.getElementById('addReaderForm').style.display = 'none';
+                document.getElementById('showAddFormBtn').style.display = 'inline-block';
+                showMessage('Читатель добавлен', 'success');
+            };
+        };
+        
+        document.getElementById('hideAddFormBtn').onclick = function() {
+            document.getElementById('addReaderForm').style.display = 'none';
+            document.getElementById('showAddFormBtn').style.display = 'inline-block';
+        };
+        
+        document.getElementById('searchInput').oninput = function() {
+            renderReadersTable(this.value);
+        };
+        
+        renderReadersTable();
+    </script>
+</body>
+</html>

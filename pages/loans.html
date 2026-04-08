@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выдача книг - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Выдача книг</h2>
+            </div>
+            
+            <div class="two-columns">
+                <div class="form-section">
+                    <h3>Выдача книги читателю</h3>
+                    <form id="loanForm">
+                        <div class="form-group">
+                            <label>Выберите читателя *</label>
+                            <select id="readerSelect" required>
+                                <option value="">-- Выберите читателя --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Выберите книгу *</label>
+                            <select id="bookSelect" required>
+                                <option value="">-- Выберите книгу --</option>
+                            </select>
+                        </div>
+                        <div class="form-info">
+                            <p>Книга выдаётся на 30 дней. Дата возврата будет установлена автоматически.</p>
+                        </div>
+                        <button type="button" id="issueBookBtn" class="btn btn-success">Выдать книгу</button>
+                    </form>
+                </div>
+                
+                <div class="list-section">
+                    <h3>Активные выдачи</h3>
+                    <div id="activeLoansList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        let books = [
+            { id: 1, title: "Война и мир", author: "Лев Толстой", available: 3 },
+            { id: 2, title: "Преступление и наказание", author: "Фёдор Достоевский", available: 2 },
+            { id: 3, title: "Мастер и Маргарита", author: "Михаил Булгаков", available: 1 },
+            { id: 4, title: "Евгений Онегин", author: "Александр Пушкин", available: 4 },
+            { id: 5, title: "Анна Каренина", author: "Лев Толстой", available: 2 }
+        ];
+        
+        let readers = [
+            { id: 1, name: "Иванов Иван Иванович", class: "9А" },
+            { id: 2, name: "Петрова Анна Сергеевна", class: "10Б" },
+            { id: 3, name: "Сидоров Дмитрий Алексеевич", class: "8В" },
+            { id: 4, name: "Кузнецова Екатерина Владимировна", class: "11А" }
+        ];
+        
+        let activeLoans = [
+            { id: 1, readerId: 1, readerName: "Иванов Иван Иванович", bookId: 1, bookTitle: "Война и мир", loanDate: "2026-03-01", dueDate: "2026-03-31", status: "active" },
+            { id: 2, readerId: 2, readerName: "Петрова Анна Сергеевна", bookId: 2, bookTitle: "Преступление и наказание", loanDate: "2026-03-10", dueDate: "2026-04-09", status: "active" },
+            { id: 3, readerId: 4, readerName: "Кузнецова Екатерина Владимировна", bookId: 3, bookTitle: "Мастер и Маргарита", loanDate: "2026-02-15", dueDate: "2026-03-17", status: "active" }
+        ];
+        
+        let nextLoanId = 4;
+        
+        function loadSelects() {
+            const readerSelect = document.getElementById('readerSelect');
+            const bookSelect = document.getElementById('bookSelect');
+            
+            readerSelect.innerHTML = '<option value="">-- Выберите читателя --</option>';
+            readers.forEach(reader => {
+                readerSelect.innerHTML += `<option value="${reader.id}">${reader.name} (${reader.class})</option>`;
+            });
+            
+            bookSelect.innerHTML = '<option value="">-- Выберите книгу --</option>';
+            books.forEach(book => {
+                if(book.available > 0) {
+                    bookSelect.innerHTML += `<option value="${book.id}">${book.title} - ${book.author} (доступно: ${book.available})</option>`;
+                }
+            });
+        }
+        
+        function renderActiveLoans() {
+            const container = document.getElementById('activeLoansList');
+            if(activeLoans.length === 0) {
+                container.innerHTML = '<p class="empty-message">Нет активных выдач</p>';
+                return;
+            }
+            
+            let html = '<table class="loans-table"><thead><tr><th>Читатель</th><th>Книга</th><th>Дата выдачи</th><th>Должен вернуть</th><th>Статус</th></tr></thead><tbody>';
+            const today = new Date().toISOString().slice(0,10);
+            
+            activeLoans.forEach(loan => {
+                const isOverdue = loan.dueDate < today;
+                const rowClass = isOverdue ? 'overdue-row' : '';
+                html += `<tr class="${rowClass}">
+                            <td>${loan.readerName}</td>
+                            <td>${loan.bookTitle}</td>
+                            <td>${loan.loanDate}</td>
+                            <td>${loan.dueDate}</td>
+                            <td>${isOverdue ? '<span class="badge overdue">Просрочена</span>' : '<span class="badge active">В срок</span>'}</td>
+                         </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function updateBookAvailability(bookId, change) {
+            const book = books.find(b => b.id === bookId);
+            if(book) {
+                book.available += change;
+            }
+        }
+        
+        document.getElementById('issueBookBtn').onclick = function() {
+            const readerId = parseInt(document.getElementById('readerSelect').value);
+            const bookId = parseInt(document.getElementById('bookSelect').value);
+            
+            if(!readerId || !bookId) {
+                showMessage('Выберите читателя и книгу', 'error');
+                return;
+            }
+            
+            const reader = readers.find(r => r.id === readerId);
+            const book = books.find(b => b.id === bookId);
+            
+            if(book.available <= 0) {
+                showMessage('Эта книга недоступна для выдачи', 'error');
+                return;
+            }
+            
+            const today = new Date();
+            const dueDate = new Date();
+            dueDate.setDate(today.getDate() + 30);
+            
+            const newLoan = {
+                id: nextLoanId++,
+                readerId: readerId,
+                readerName: reader.name,
+                bookId: bookId,
+                bookTitle: book.title,
+                loanDate: today.toISOString().slice(0,10),
+                dueDate: dueDate.toISOString().slice(0,10),
+                status: 'active'
+            };
+            
+            activeLoans.push(newLoan);
+            updateBookAvailability(bookId, -1);
+            loadSelects();
+            renderActiveLoans();
+            showMessage(`Книга "${book.title}" выдана читателю ${reader.name}`, 'success');
+        };
+        
+        loadSelects();
+        renderActiveLoans();
+    </script>
+    
+    <style>
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+        
+        .form-section, .list-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .form-info {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .loans-table {
+            width: 100%;
+            font-size: 14px;
+        }
+        
+        .loans-table th, .loans-table td {
+            padding: 8px;
+        }
+        
+        .overdue-row {
+            background-color: #fee2e2;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .badge.active {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .badge.overdue {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        
+        @media (max-width: 768px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

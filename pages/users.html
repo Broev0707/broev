@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пользователи - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Управление пользователями системы</h2>
+            </div>
+            
+            <div class="users-container">
+                <div class="users-header">
+                    <button class="btn btn-primary" id="showAddUserBtn">+ Добавить пользователя</button>
+                </div>
+                
+                <div id="addUserForm" style="display:none;" class="form-container">
+                    <h4>Добавление нового пользователя</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Логин *</label>
+                            <input type="text" id="userLogin" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Пароль *</label>
+                            <input type="text" id="userPassword" value="123456" required>
+                            <small>По умолчанию: 123456</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Роль *</label>
+                            <select id="userRole">
+                                <option value="student">Ученик</option>
+                                <option value="librarian">Библиотекарь</option>
+                                <option value="admin">Администратор</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Привязать к читателю</label>
+                            <select id="userReaderId">
+                                <option value="">-- Не привязывать --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="saveUserBtn" class="btn btn-success">Сохранить</button>
+                        <button id="hideAddUserBtn" class="btn btn-secondary">Отмена</button>
+                    </div>
+                </div>
+                
+                <div class="users-table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Логин</th>
+                                <th>Роль</th>
+                                <th>Привязанный читатель</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-note">
+                    <strong>Информация:</strong>
+                    <ul>
+                        <li>Для входа в систему используйте логин и пароль.</li>
+                        <li>При сбросе пароля устанавливается пароль: <code>123456</code>.</li>
+                        <li>Для учеников рекомендуется привязывать учётную запись к читателю, чтобы они могли видеть свои книги в разделе "Мои книги".</li>
+                        <li>Нельзя удалить собственную учётную запись.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        let readers = [
+            { id: 1, name: "Иванов Иван Иванович", class: "9А" },
+            { id: 2, name: "Петрова Анна Сергеевна", class: "10Б" },
+            { id: 3, name: "Сидоров Дмитрий Алексеевич", class: "8В" },
+            { id: 4, name: "Кузнецова Екатерина Владимировна", class: "11А" }
+        ];
+        
+        let users = [
+            { id: 1, login: "admin", role: "admin", readerId: null, readerName: null },
+            { id: 2, login: "librarian", role: "librarian", readerId: null, readerName: null },
+            { id: 3, login: "student", role: "student", readerId: 1, readerName: "Иванов Иван Иванович" }
+        ];
+        
+        let nextUserId = 4;
+        const currentUserId = 1;
+        
+        function loadReaderSelect() {
+            const select = document.getElementById('userReaderId');
+            select.innerHTML = '<option value="">-- Не привязывать --</option>';
+            readers.forEach(reader => {
+                select.innerHTML += `<option value="${reader.id}">${reader.name} (${reader.class})</option>`;
+            });
+        }
+        
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = user.id;
+                row.insertCell(1).textContent = user.login;
+                
+                let roleText = '';
+                if(user.role === 'admin') roleText = 'Администратор';
+                else if(user.role === 'librarian') roleText = 'Библиотекарь';
+                else roleText = 'Ученик';
+                row.insertCell(2).innerHTML = `<span class="role-badge ${user.role}">${roleText}</span>`;
+                
+                row.insertCell(3).innerHTML = user.readerName ? `${user.readerName}<br><small>ID: ${user.readerId}</small>` : '<span class="not-linked">Не привязан</span>';
+                
+                const actionsCell = row.insertCell(4);
+                let actions = `<button class="btn-reset" onclick="resetPassword(${user.id})">Сбросить пароль</button>`;
+                if(user.id !== currentUserId) {
+                    actions += ` <button class="btn-delete-user" onclick="deleteUser(${user.id})">Удалить</button>`;
+                }
+                actionsCell.innerHTML = actions;
+            });
+        }
+        
+        function resetPassword(userId) {
+            const user = users.find(u => u.id === userId);
+            if(user && confirm(`Сбросить пароль для пользователя ${user.login}?`)) {
+                showMessage(`Пароль для пользователя ${user.login} сброшен на 123456`, 'success');
+            }
+        }
+        
+        function deleteUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if(user && confirm(`Удалить пользователя ${user.login}?`)) {
+                users = users.filter(u => u.id !== userId);
+                renderUsersTable();
+                showMessage('Пользователь удалён', 'success');
+            }
+        }
+        
+        document.getElementById('showAddUserBtn').onclick = function() {
+            document.getElementById('addUserForm').style.display = 'block';
+            this.style.display = 'none';
+            document.getElementById('userLogin').value = '';
+            document.getElementById('userPassword').value = '123456';
+            document.getElementById('userRole').value = 'student';
+            document.getElementById('userReaderId').value = '';
+            loadReaderSelect();
+        };
+        
+        document.getElementById('hideAddUserBtn').onclick = function() {
+            document.getElementById('addUserForm').style.display = 'none';
+            document.getElementById('showAddUserBtn').style.display = 'inline-block';
+        };
+        
+        document.getElementById('saveUserBtn').onclick = function() {
+            const login = document.getElementById('userLogin').value.trim();
+            const role = document.getElementById('userRole').value;
+            const readerId = document.getElementById('userReaderId').value;
+            
+            if(!login) {
+                showMessage('Введите логин', 'error');
+                return;
+            }
+            
+            if(users.some(u => u.login === login)) {
+                showMessage('Пользователь с таким логином уже существует', 'error');
+                return;
+            }
+            
+            const reader = readerId ? readers.find(r => r.id == readerId) : null;
+            
+            const newUser = {
+                id: nextUserId++,
+                login: login,
+                role: role,
+                readerId: readerId ? parseInt(readerId) : null,
+                readerName: reader ? reader.name : null
+            };
+            
+            users.push(newUser);
+            renderUsersTable();
+            document.getElementById('addUserForm').style.display = 'none';
+            document.getElementById('showAddUserBtn').style.display = 'inline-block';
+            showMessage(`Пользователь ${login} добавлен. Пароль: 123456`, 'success');
+        };
+        
+        renderUsersTable();
+    </script>
+    
+    <style>
+        .users-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .users-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .form-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .form-group small {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .users-table-wrapper {
+            overflow-x: auto;
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .users-table th, .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .users-table th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .role-badge.admin {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .role-badge.librarian {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .role-badge.student {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .not-linked {
+            color: #f39c12;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        .btn-reset {
+            background-color: #f39c12;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        
+        .btn-delete-user {
+            background-color: #e74c3c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .info-note {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .info-note ul {
+            margin: 10px 0 0 20px;
+        }
+        
+        .info-note code {
+            background: #2c3e50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</body>
+</html>

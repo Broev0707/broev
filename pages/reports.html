@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчёты - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Формирование отчётов</h2>
+            </div>
+            
+            <div class="reports-container">
+                <div class="report-menu">
+                    <button class="report-btn" onclick="showReport('debtors')">📋 Должники</button>
+                    <button class="report-btn" onclick="showReport('popular')">📚 Популярные книги</button>
+                    <button class="report-btn" onclick="showReport('lowstock')">⚠️ Низкий запас</button>
+                    <button class="report-btn" onclick="showReport('stats')">📈 Общая статистика</button>
+                </div>
+                
+                <div id="reportResult" class="report-result">
+                    <div class="info-message">Выберите тип отчёта из меню выше.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        let books = [
+            { id: 1, title: "Война и мир", author: "Лев Толстой", total: 5, available: 3 },
+            { id: 2, title: "Преступление и наказание", author: "Фёдор Достоевский", total: 4, available: 2 },
+            { id: 3, title: "Мастер и Маргарита", author: "Михаил Булгаков", total: 3, available: 1 },
+            { id: 4, title: "Евгений Онегин", author: "Александр Пушкин", total: 6, available: 4 },
+            { id: 5, title: "Анна Каренина", author: "Лев Толстой", total: 4, available: 2 }
+        ];
+        
+        let readers = [
+            { id: 1, name: "Иванов Иван Иванович", class: "9А" },
+            { id: 2, name: "Петрова Анна Сергеевна", class: "10Б" },
+            { id: 3, name: "Сидоров Дмитрий Алексеевич", class: "8В" },
+            { id: 4, name: "Кузнецова Екатерина Владимировна", class: "11А" }
+        ];
+        
+        let activeLoans = [
+            { readerId: 1, readerName: "Иванов Иван Иванович", bookId: 1, bookTitle: "Война и мир", dueDate: "2026-03-31" },
+            { readerId: 2, readerName: "Петрова Анна Сергеевна", bookId: 2, bookTitle: "Преступление и наказание", dueDate: "2026-04-09" },
+            { readerId: 4, readerName: "Кузнецова Екатерина Владимировна", bookId: 3, bookTitle: "Мастер и Маргарита", dueDate: "2026-03-17" }
+        ];
+        
+        let loanHistory = [
+            { bookId: 1, title: "Война и мир" },
+            { bookId: 1, title: "Война и мир" },
+            { bookId: 2, title: "Преступление и наказание" },
+            { bookId: 1, title: "Война и мир" },
+            { bookId: 3, title: "Мастер и Маргарита" },
+            { bookId: 4, title: "Евгений Онегин" },
+            { bookId: 2, title: "Преступление и наказание" }
+        ];
+        
+        function showReport(type) {
+            const container = document.getElementById('reportResult');
+            const today = new Date().toISOString().slice(0,10);
+            
+            if(type === 'debtors') {
+                const debtors = activeLoans.filter(loan => loan.dueDate < today);
+                if(debtors.length === 0) {
+                    container.innerHTML = '<div class="empty-message">Нет должников. Все книги возвращены вовремя.</div>';
+                    return;
+                }
+                
+                let html = '<h4>Список должников (читатели с просроченными книгами)</h4><table><thead><tr><th>ФИО</th><th>Класс</th><th>Книга</th><th>Должен вернуть</th></tr></thead><tbody>';
+                debtors.forEach(debtor => {
+                    const reader = readers.find(r => r.id === debtor.readerId);
+                    html += `<tr class="warning-row">
+                                <td>${debtor.readerName}</td>
+                                <td>${reader ? reader.class : ''}</td>
+                                <td>${debtor.bookTitle}</td>
+                                <td class="overdue-date">${debtor.dueDate}</td>
+                            </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+            else if(type === 'popular') {
+                const loanCount = {};
+                loanHistory.forEach(loan => {
+                    loanCount[loan.bookId] = (loanCount[loan.bookId] || 0) + 1;
+                });
+                
+                const popular = Object.entries(loanCount).map(([bookId, count]) => {
+                    const book = books.find(b => b.id == bookId);
+                    return { title: book ? book.title : 'Неизвестно', author: book ? book.author : '', count: count };
+                }).sort((a,b) => b.count - a.count).slice(0,5);
+                
+                let html = '<h4>Самые популярные книги (по количеству выдач)</h4><table><thead><tr><th>#</th><th>Название</th><th>Автор</th><th>Количество выдач</th></tr></thead><tbody>';
+                popular.forEach((book, index) => {
+                    html += `<tr><td>${index+1}</td><td>${book.title}</td><td>${book.author}</td><td>${book.count}</td></tr>`;
+                });
+                html += '</tbody></table>>';
+                container.innerHTML = html;
+            }
+            else if(type === 'lowstock') {
+                const lowStock = books.filter(book => book.available < 3);
+                if(lowStock.length === 0) {
+                    container.innerHTML = '<div class="empty-message">Все книги в достаточном количестве.</div>';
+                    return;
+                }
+                
+                let html = '<h4>Книги с низким количеством экземпляров (менее 3)</h4><table><thead><tr><th>Название</th><th>Автор</th><th>Всего</th><th>Доступно</th></tr></thead><tbody>';
+                lowStock.forEach(book => {
+                    html += `<tr class="warning-row">
+                                <td>${book.title}</td>
+                                <td>${book.author}</td>
+                                <td>${book.total}</td>
+                                <td>${book.available}</td>
+                            </tr>`;
+                });
+                html += '</tbody></table>>';
+                container.innerHTML = html;
+            }
+            else if(type === 'stats') {
+                const totalBooks = books.reduce((sum, b) => sum + b.total, 0);
+                const totalReaders = readers.length;
+                const activeCount = activeLoans.length;
+                const overdueCount = activeLoans.filter(loan => loan.dueDate < today).length;
+                
+                container.innerHTML = `<div class="stats-grid">
+                    <div class="stat-item"><div class="stat-value">${totalBooks}</div><div class="stat-desc">Всего книг</div></div>
+                    <div class="stat-item"><div class="stat-value">${totalReaders}</div><div class="stat-desc">Читателей</div></div>
+                    <div class="stat-item"><div class="stat-value">${activeCount}</div><div class="stat-desc">Активных выдач</div></div>
+                    <div class="stat-item"><div class="stat-value ${overdueCount > 0 ? 'negative' : ''}">${overdueCount}</div><div class="stat-desc">Должников</div></div>
+                </div>`;
+            }
+        }
+    </script>
+    
+    <style>
+        .reports-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .report-menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .report-btn {
+            padding: 10px 20px;
+            background: #ecf0f1;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .report-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .report-result h4 {
+            margin-bottom: 15px;
+        }
+        
+        .warning-row {
+            background-color: #fff3cd;
+        }
+        
+        .overdue-date {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-value.negative {
+            color: #e74c3c;
+        }
+        
+        .stat-desc {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .info-message, .empty-message {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</body>
+</html>

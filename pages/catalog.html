@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог книг - Школьная библиотека</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Школьная библиотека</h1>
+            <p>МКОУ СОШ №25 г. Нальчика</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">☰ Меню</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="books.html">Книги</a></li>
+                <li><a href="readers.html">Читатели</a></li>
+                <li><a href="loans.html">Выдача книг</a></li>
+                <li><a href="returns.html">Возврат книг</a></li>
+                <li><a href="reports.html">Отчёты</a></li>
+                <li><a href="catalog.html">Каталог</a></li>
+                <li><a href="mybooks.html">Мои книги</a></li>
+                <li><a href="users.html">Пользователи</a></li>
+                <li><a href="../login.html" class="logout-btn">Выход</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h2>Каталог книг</h2>
+                <p class="catalog-desc">Добро пожаловать в библиотечный каталог. Здесь вы можете найти книги и проверить их наличие.</p>
+            </div>
+            
+            <div class="catalog-filters">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <input type="text" id="searchInput" placeholder="Поиск по названию или автору">
+                    </div>
+                    <div class="filter-group">
+                        <select id="authorFilter">
+                            <option value="">Все авторы</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button id="searchBtn" class="btn btn-primary">Найти</button>
+                        <button id="resetBtn" class="btn btn-secondary">Сбросить</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="catalogStats" class="catalog-stats"></div>
+            <div id="booksGrid" class="books-grid"></div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2026 Школьная библиотека. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <script src="../js/script.js"></script>
+    <script>
+        let books = [
+            { id: 1, title: "Война и мир", author: "Лев Толстой", year: 1869, publisher: "Русский вестник", available: 3, location: "Стеллаж 1, полка 2" },
+            { id: 2, title: "Преступление и наказание", author: "Фёдор Достоевский", year: 1866, publisher: "Русский вестник", available: 2, location: "Стеллаж 1, полка 3" },
+            { id: 3, title: "Мастер и Маргарита", author: "Михаил Булгаков", year: 1967, publisher: "Москва", available: 1, location: "Стеллаж 2, полка 1" },
+            { id: 4, title: "Евгений Онегин", author: "Александр Пушкин", year: 1833, publisher: "Современник", available: 4, location: "Стеллаж 1, полка 1" },
+            { id: 5, title: "Анна Каренина", author: "Лев Толстой", year: 1877, publisher: "Русский вестник", available: 2, location: "Стеллаж 1, полка 2" },
+            { id: 6, title: "Тихий Дон", author: "Михаил Шолохов", year: 1940, publisher: "Худлит", available: 0, location: "Стеллаж 2, полка 3" },
+            { id: 7, title: "Идиот", author: "Фёдор Достоевский", year: 1869, publisher: "Русский вестник", available: 1, location: "Стеллаж 1, полка 3" }
+        ];
+        
+        function getUniqueAuthors() {
+            const authors = [...new Set(books.map(book => book.author))];
+            return authors.sort();
+        }
+        
+        function loadAuthorFilter() {
+            const select = document.getElementById('authorFilter');
+            const authors = getUniqueAuthors();
+            select.innerHTML = '<option value="">Все авторы</option>';
+            authors.forEach(author => {
+                select.innerHTML += `<option value="${author}">${author}</option>`;
+            });
+        }
+        
+        function renderCatalog() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const authorFilter = document.getElementById('authorFilter').value;
+            
+            let filteredBooks = books.filter(book => {
+                const matchesSearch = book.title.toLowerCase().includes(searchTerm) || 
+                                     book.author.toLowerCase().includes(searchTerm);
+                const matchesAuthor = authorFilter === '' || book.author === authorFilter;
+                return matchesSearch && matchesAuthor;
+            });
+            
+            const statsDiv = document.getElementById('catalogStats');
+            statsDiv.innerHTML = `Найдено книг: ${filteredBooks.length}`;
+            
+            const gridDiv = document.getElementById('booksGrid');
+            if(filteredBooks.length === 0) {
+                gridDiv.innerHTML = '<div class="empty-catalog"><p>Книги не найдены. Попробуйте изменить параметры поиска.</p></div>';
+                return;
+            }
+            
+            let html = '';
+            filteredBooks.forEach(book => {
+                html += `
+                    <div class="book-card">
+                        <div class="book-cover">
+                            <div class="book-icon">📖</div>
+                        </div>
+                        <div class="book-info">
+                            <h4 class="book-title">${escapeHtml(book.title)}</h4>
+                            <p class="book-author">Автор: ${escapeHtml(book.author)}</p>
+                            <p class="book-year">Год: ${book.year}</p>
+                            <p class="book-publisher">Издательство: ${escapeHtml(book.publisher)}</p>
+                            <div class="book-status">
+                                ${book.available > 0 ? 
+                                    `<span class="status available">✓ В наличии (${book.available} экз.)</span>` : 
+                                    `<span class="status unavailable">✗ Нет в наличии</span>`}
+                            </div>
+                            <p class="book-location">📍 ${escapeHtml(book.location)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            gridDiv.innerHTML = html;
+        }
+        
+        function escapeHtml(str) {
+            if(!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        document.getElementById('searchBtn').addEventListener('click', renderCatalog);
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('authorFilter').value = '';
+            renderCatalog();
+        });
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') renderCatalog();
+        });
+        
+        loadAuthorFilter();
+        renderCatalog();
+    </script>
+    
+    <style>
+        .catalog-desc {
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .catalog-filters {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .catalog-stats {
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .book-card {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #eee;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .book-cover {
+            width: 80px;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .book-icon {
+            font-size: 40px;
+            color: white;
+        }
+        
+        .book-info {
+            flex: 1;
+            padding: 12px;
+        }
+        
+        .book-title {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .book-author {
+            font-size: 13px;
+            color: #555;
+            margin: 5px 0;
+        }
+        
+        .book-year, .book-publisher, .book-location {
+            font-size: 12px;
+            color: #777;
+            margin: 3px 0;
+        }
+        
+        .book-status {
+            margin-top: 8px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.unavailable {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .empty-catalog {
+            text-align: center;
+            padding: 50px;
+            background: white;
+            border-radius: 8px;
+            color: #888;
+        }
+        
+        @media (max-width: 768px) {
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+            .filter-row {
+                flex-direction: column;
+            }
+            .filter-group {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>
